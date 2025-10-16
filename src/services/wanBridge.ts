@@ -1,9 +1,6 @@
 import axios from 'axios'
 
-import {
-  BACKEND_API_BASE,
-  WANBRIDGE_STATUS_BASE,
-} from '../config/constants'
+import { BACKEND_API_BASE, WANBRIDGE_STATUS_BASE } from '../config/constants'
 
 export interface WanBridgeTransferParams {
   fromChain: string
@@ -32,45 +29,44 @@ export interface WanBridgeTransferStatus {
   reason?: string
 }
 
-const BACKEND_CREATE_PATH = '/bridge/create'
-const BACKEND_STATUS_PATH = '/bridge/status'
+const BRIDGE_CREATE_PATH = '/bridge/create'
+const BRIDGE_STATUS_PATH = '/bridge/status'
 
-const trimTrailingSlash = (value: string) => value.replace(/\/$/, '')
+const joinUrl = (base: string, path: string) => `${base.replace(/\/+$/, '')}${path}`
 
-const resolveEndpoint = (base: string, path: string) => `${trimTrailingSlash(base)}${path}`
+const buildMockStatus = (taskId: string): WanBridgeTransferStatus => ({
+  status: 'completed',
+  txHash: `0xmock${taskId.slice(-8)}`,
+})
 
 export const submitWanBridgeTransfer = async (
   request: WanBridgeTransferRequest,
 ): Promise<WanBridgeTransferResponse> => {
-  if (!BACKEND_API_BASE) {
-    throw new Error('Backend base URL missing. Configure VITE_BACKEND_API_BASE to enable bridging.')
+  const backendBase = BACKEND_API_BASE?.trim()
+  if (!backendBase) {
+    throw new Error('Set VITE_BACKEND_API_BASE to enable WanBridge transfers.')
   }
 
-  const endpoint = resolveEndpoint(BACKEND_API_BASE, BACKEND_CREATE_PATH)
-  const { data } = await axios.post(endpoint, request)
-  return data as WanBridgeTransferResponse
+  const endpoint = joinUrl(backendBase, BRIDGE_CREATE_PATH)
+  const { data } = await axios.post<WanBridgeTransferResponse>(endpoint, request)
+  return data
 }
 
 export const fetchWanBridgeStatus = async (taskId: string): Promise<WanBridgeTransferStatus> => {
-  const endpoint = BACKEND_API_BASE
-    ? resolveEndpoint(BACKEND_API_BASE, BACKEND_STATUS_PATH)
-    : WANBRIDGE_STATUS_BASE
-      ? resolveEndpoint(WANBRIDGE_STATUS_BASE, `/${taskId}`)
-      : null
-
-  if (!endpoint) {
-    console.warn('WanBridge base URL missing. Returning mock status.')
-    return {
-      status: 'completed',
-      txHash: `0xmock${taskId.slice(-8)}`,
-    }
+  const backendBase = BACKEND_API_BASE?.trim()
+  if (backendBase) {
+    const endpoint = joinUrl(backendBase, BRIDGE_STATUS_PATH)
+    const { data } = await axios.post<WanBridgeTransferStatus>(endpoint, { taskId })
+    return data
   }
 
-  if (BACKEND_API_BASE) {
-    const { data } = await axios.post(endpoint, { taskId })
-    return data as WanBridgeTransferStatus
+  const statusBase = WANBRIDGE_STATUS_BASE?.trim()
+  if (!statusBase) {
+    console.warn('WanBridge status base missing. Returning mock status response.')
+    return buildMockStatus(taskId)
   }
 
-  const { data } = await axios.get(endpoint)
-  return data as WanBridgeTransferStatus
+  const endpoint = joinUrl(statusBase, `/${taskId}`)
+  const { data } = await axios.get<WanBridgeTransferStatus>(endpoint)
+  return data
 }

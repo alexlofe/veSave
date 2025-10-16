@@ -1,4 +1,5 @@
 ﻿
+import { useConnectModal, useWallet } from '@vechain/vechain-kit'
 import type { FormEvent } from 'react'
 import { useMemo, useState } from 'react'
 
@@ -20,6 +21,9 @@ type StatusLink = {
 const buildExplorerLink = (base: string, id: string) => `${base.replace(/\/$/, '')}/${id}`
 
 const App = () => {
+  const { account, connection, disconnect } = useWallet()
+  const { open: openConnectModal } = useConnectModal()
+
   const [usdcAmount, setUsdcAmount] = useState(DEFAULT_AMOUNT)
   const [networkError, setNetworkError] = useState<string | null>(null)
   const [isWalletModalOpen, setWalletModalOpen] = useState(false)
@@ -61,6 +65,21 @@ const App = () => {
     return { swap, bridge, stake }
   }, [lastSwap, lastBridge, lastStake])
 
+  const connectedAddress = account?.address ?? null
+  const isConnected = Boolean(connection?.isConnected && connectedAddress)
+
+  const accountPreview = useMemo(
+    () =>
+      connectedAddress
+        ? `${connectedAddress.slice(0, 6)}...${connectedAddress.slice(-4)}`
+        : '',
+    [connectedAddress],
+  )
+
+  const handleLogin = () => {
+    openConnectModal()
+  }
+
   const handleCreateWallet = async () => {
     setNetworkError(null)
     setCopyState(null)
@@ -83,6 +102,11 @@ const App = () => {
     setWalletModalOpen(false)
     setCopyState(null)
     await resetWallet()
+  }
+
+  const handleLogout = async () => {
+    await disconnect()
+    await handleReset()
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -122,6 +146,22 @@ const App = () => {
     }
   }
 
+  if (!isConnected) {
+    return (
+      <div className="login-screen">
+        <h1>veSave - the better way to save</h1>
+        <button
+          className="primary"
+          type="button"
+          onClick={handleLogin}
+          disabled={connection?.isLoading}
+        >
+          {connection?.isLoading ? 'Connecting...' : 'Login'}
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -130,6 +170,10 @@ const App = () => {
           <p className="subtitle">Bridge, swap, and stake USDC with one click.</p>
         </div>
         <div className="header-actions">
+          {accountPreview ? <span className="helper-text">Logged in: {accountPreview}</span> : null}
+          <button className="secondary" onClick={() => { void handleLogout() }} type="button">
+            Logout
+          </button>
           <button
             className="secondary"
             disabled={Boolean(walletSession)}
@@ -377,4 +421,3 @@ const StatusBadge = ({
 )
 
 export default App
-

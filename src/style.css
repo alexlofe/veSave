@@ -27,6 +27,29 @@ body {
   min-height: 100vh;
 }
 
+.login-screen {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.login-screen h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  letter-spacing: -0.015em;
+  color: #dbe4ff;
+}
+
+.login-screen .primary {
+  min-width: 220px;
+}
+
 .app-shell {
   margin: 0 auto;
   width: min(960px, 100%);

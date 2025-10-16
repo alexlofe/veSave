@@ -9,20 +9,21 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "typescript": "~5.9.3",
     "vite": "^7.1.7"
   },
   "dependencies": {
     "@vechain/dapp-kit": "^2.0.4",
     "@vechain/sdk-core": "^2.0.5",
+    "@vechain/vechain-kit": "^2.0.0-rc.16",
     "axios": "^1.12.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "ethers": "^6.15.0",
     "express": "^5.1.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }

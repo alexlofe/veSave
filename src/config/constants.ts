@@ -19,6 +19,9 @@ export const VECHAIN_TESTNET_TX_BASE =
 
 export const BACKEND_API_BASE = import.meta.env.VITE_BACKEND_API_BASE ?? ''
 
+export const VECHAIN_NODE_URL =
+  import.meta.env.VITE_VECHAIN_NODE_URL ?? 'https://testnet.vechain.org/'
+
 export const SEPOLIA_USDC_ADDRESS =
   import.meta.env.VITE_SEPOLIA_USDC_ADDRESS ?? '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238'
 
