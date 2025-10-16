@@ -3,10 +3,25 @@ import cors from 'cors'
 import axios from 'axios'
 import dotenv from 'dotenv'
 import { Wallet as EthersWallet, JsonRpcProvider, Contract } from 'ethers'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 import { createWalletBundle, getWalletBundle, deleteWalletBundle } from './walletStore.js'
 
-dotenv.config()
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const rootEnvPath = path.resolve(__dirname, '../../.env')
+const backendEnvPath = path.resolve(__dirname, '../.env')
+
+const loadEnvIfPresent = (envPath) => {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath })
+  }
+}
+
+loadEnvIfPresent(rootEnvPath)
+loadEnvIfPresent(backendEnvPath)
 
 const joinPath = (base, path) => `${base.replace(/\/$/, '')}${path}`
 
