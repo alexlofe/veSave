@@ -12,7 +12,6 @@ import { createWalletBundle, getWalletBundle, deleteWalletBundle } from './walle
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const rootEnvPath = path.resolve(__dirname, '../../.env')
-const backendEnvPath = path.resolve(__dirname, '../.env')
 
 const loadEnvIfPresent = (envPath) => {
   if (fs.existsSync(envPath)) {
@@ -21,7 +20,6 @@ const loadEnvIfPresent = (envPath) => {
 }
 
 loadEnvIfPresent(rootEnvPath)
-loadEnvIfPresent(backendEnvPath)
 
 const joinPath = (base, path) => `${base.replace(/\/$/, '')}${path}`
 

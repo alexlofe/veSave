@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { Address, Secp256k1 } from '@vechain/sdk-core'
 
 import { BACKEND_API_BASE } from '../config/constants'
 
@@ -28,20 +29,28 @@ const randomHex = (length: number) => {
     .slice(0, length)
 }
 
-const buildMockWalletSession = (): WalletSession => ({
-  sessionId: `mock-session-${Date.now().toString(16)}`,
-  ethereum: { address: `0x${randomHex(40)}` },
-  vechain: { address: `0x${randomHex(40)}` },
-})
+/**
+ * VECHAIN WALLET CREATION: ONE-TIME WALLETS
+ */
+const buildMockWalletSession = async (): Promise<WalletSession> => {
+  const vechainKey = await Secp256k1.generatePrivateKey()
+  const vechainAddress = Address.ofPrivateKey(vechainKey).digits
+
+  return {
+    sessionId: `mock-session-${Date.now().toString(16)}`,
+    ethereum: { address: `0x${randomHex(40)}` },
+    vechain: { address: `0x${vechainAddress}` },
+  }
+}
 
 export const useEphemeralWallet = () => {
   const [wallet, setWallet] = useState<WalletSession | null>(null)
 
   const createWallet = useCallback(async () => {
     const trimmedBase = BACKEND_API_BASE.trim()
-    const fallback = () => {
+    const fallback = async () => {
       console.warn('Using mock wallet session. Backend wallet endpoint unavailable.')
-      const session = buildMockWalletSession()
+      const session = await buildMockWalletSession()
       setWallet(session)
       return session
     }

@@ -5,6 +5,19 @@ import App from './App.tsx'
 import { VeChainKitProviderWrapper } from './providers/VeChainKitProvider.tsx'
 import './style.css'
 
+const walletConnectProjectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID ?? ''
+const globalProcess = (globalThis as Record<string, unknown>).process as {
+  env?: Record<string, string | undefined>
+} | undefined
+
+;(globalThis as Record<string, unknown>).process = {
+  ...(globalProcess ?? {}),
+  env: {
+    ...(globalProcess?.env ?? {}),
+    NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: walletConnectProjectId,
+  },
+}
+
 ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
   <React.StrictMode>
     <VeChainKitProviderWrapper>

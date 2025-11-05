@@ -1,53 +1,54 @@
-import type { ReactNode } from 'react'
-import { VeChainKitProvider } from '@vechain/vechain-kit'
+'use client';
 
-import { VECHAIN_NODE_URL } from '../config/constants'
+import { VeChainKitProvider } from "@vechain/vechain-kit";
 
-interface VeChainKitProviderWrapperProps {
-  children: ReactNode
-}
-
-const loginMethods = [
-  { method: 'vechain', gridColumn: 4 },
-  { method: 'dappkit', gridColumn: 4 },
-] as const
-
-const walletConnectProjectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID ?? ''
-
-const metadata = {
-  name: 'veSave',
-  description: 'Bridge demo showcasing VeChainThor tooling.',
-  url: typeof window !== 'undefined' ? window.location.origin : '',
-  icons: ['https://vechainkit.vechain.org/kit-preview.png'],
-}
-
-export function VeChainKitProviderWrapper({ children }: VeChainKitProviderWrapperProps) {
-  const walletConnectOptions = walletConnectProjectId
-    ? {
-        projectId: walletConnectProjectId,
-        metadata,
-      }
-    : undefined
-
+export function VeChainKitProviderWrapper({ children }: { children: React.ReactNode }) {
   return (
     <VeChainKitProvider
+      // Network Configuration
+      network={{
+        type: "test", // "main" | "test" | "solo"
+      }}
+      
+      // Fee Delegation
       feeDelegation={{
-        delegatorUrl: 'https://sponsor-testnet.vechain.energy/by/909',
-        delegateAllTransactions: false,
+        delegatorUrl: "https://sponsor-testnet.vechain.energy/by/441",
+        delegateAllTransactions: false, // Set to true to delegate all transactions
       }}
-      loginMethods={[...loginMethods]}
+      
+      // Login Methods Configuration
+      loginMethods={[
+        { method: "vechain", gridColumn: 4 },
+        { method: "dappkit", gridColumn: 4 },
+        { method: "ecosystem", gridColumn: 4 },
+      ]}
+      
+      // DApp Kit Configuration
       dappKit={{
-        allowedWallets: ['veworld'],
-        ...(walletConnectOptions ? { walletConnectOptions } : {}),
+        allowedWallets: ["veworld", "wallet-connect", "sync2"],
+        walletConnectOptions: {
+          projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID!,
+          metadata: {
+            name: "Your DApp Name",
+            description: "Your DApp description visible in wallets",
+            url: typeof window !== "undefined" ? window.location.origin : "",
+            icons: ["https://your-domain.com/logo.png"],
+          },
+        },
       }}
+      
+      // UI Configuration
       darkMode={false}
       language="en"
-      network={{
-        type: 'test',
-        nodeUrl: VECHAIN_NODE_URL,
+      allowCustomTokens={false}
+      
+      // Login Modal UI Customization
+      loginModalUI={{
+        logo: '/your-logo.png',
+        description: 'Welcome to our DApp',
       }}
     >
       {children}
     </VeChainKitProvider>
-  )
+  );
 }

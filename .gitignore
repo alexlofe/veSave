@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .env
+
+providers/VeChainKitProvider.tsx
+constants_copy.ts
