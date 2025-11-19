@@ -1,5 +1,5 @@
 ﻿
-import { useConnectModal, useWallet } from '@vechain/vechain-kit'
+import { useWallet, useWalletModal } from '@vechain/dapp-kit-react'
 import type { FormEvent } from 'react'
 import { useMemo, useState } from 'react'
 
@@ -21,8 +21,8 @@ type StatusLink = {
 const buildExplorerLink = (base: string, id: string) => `${base.replace(/\/$/, '')}/${id}`
 
 const App = () => {
-  const { account, connection, disconnect } = useWallet()
-  const { open: openConnectModal } = useConnectModal()
+  const { account, disconnect } = useWallet()
+  const { open: openConnectModal } = useWalletModal()
 
   const [usdcAmount, setUsdcAmount] = useState(DEFAULT_AMOUNT)
   const [networkError, setNetworkError] = useState<string | null>(null)
@@ -65,8 +65,8 @@ const App = () => {
     return { swap, bridge, stake }
   }, [lastSwap, lastBridge, lastStake])
 
-  const connectedAddress = account?.address ?? null
-  const isConnected = Boolean(connection?.isConnected && connectedAddress)
+  const connectedAddress = account ?? null
+  const isConnected = !!account
 
   const accountPreview = useMemo(
     () =>
@@ -105,7 +105,7 @@ const App = () => {
   }
 
   const handleLogout = async () => {
-    await disconnect()
+    disconnect()
     await handleReset()
   }
 
@@ -154,9 +154,8 @@ const App = () => {
           className="primary"
           type="button"
           onClick={handleLogin}
-          disabled={connection?.isLoading}
         >
-          {connection?.isLoading ? 'Connecting...' : 'Login'}
+          Login
         </button>
       </div>
     )

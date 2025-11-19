@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 import App from './App.tsx'
-import { VeChainKitProviderWrapper } from './providers/VeChainKitProvider.tsx'
+import { VeChainDAppKitProvider } from './components/DAppKitProvider.tsx'
 import './style.css'
 
 const walletConnectProjectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID ?? ''
@@ -20,8 +20,8 @@ const globalProcess = (globalThis as Record<string, unknown>).process as {
 
 ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
   <React.StrictMode>
-    <VeChainKitProviderWrapper>
+    <VeChainDAppKitProvider>
       <App />
-    </VeChainKitProviderWrapper>
+    </VeChainDAppKitProvider>
   </React.StrictMode>,
 )
