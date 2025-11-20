@@ -28,8 +28,8 @@ interface IUniswapV2Router02 {
 contract B3TRVetSwapper is Ownable {
     using SafeERC20 for IERC20;
 
-    // B3TR Token Address (VeChain Mainnet)
-    address public constant B3TR_ADDRESS = 0x5ef79995FE8a89e0812330E4378eB2660ceDe699;
+    // B3TR Token Address
+    address public immutable B3TR_ADDRESS;
     
     IUniswapV2Router02 public router;
     address public WVET_ADDRESS;
@@ -38,10 +38,13 @@ contract B3TRVetSwapper is Ownable {
     event RouterUpdated(address indexed newRouter);
 
     /**
-     * @dev Constructor to set the BetterSwap Router address.
+     * @dev Constructor to set the B3TR address and BetterSwap Router address.
+     * @param _b3trAddress The address of the B3TR token.
      * @param _routerAddress The address of the BetterSwap Router contract.
      */
-    constructor(address _routerAddress) Ownable(msg.sender) {
+    constructor(address _b3trAddress, address _routerAddress) Ownable(msg.sender) {
+        require(_b3trAddress != address(0), "Invalid B3TR address");
+        B3TR_ADDRESS = _b3trAddress;
         _setRouter(_routerAddress);
     }
 
@@ -59,24 +62,19 @@ contract B3TRVetSwapper is Ownable {
     ) external {
         require(amountIn > 0, "Amount must be > 0");
 
-        // 1. Transfer B3TR from the user to this contract securely
         IERC20(B3TR_ADDRESS).safeTransferFrom(msg.sender, address(this), amountIn);
 
-        // 2. Ensure the router is approved to spend the B3TR
         _approveRouter();
 
-        // 3. Define the swap path: B3TR -> WVET
         address[] memory path = new address[](2);
         path[0] = B3TR_ADDRESS;
         path[1] = WVET_ADDRESS;
 
-        // 4. Execute the swap
-        // swapExactTokensForETH handles unwrapping WVET to VET and sends it to the recipient.
         uint[] memory amounts = router.swapExactTokensForETH(
             amountIn,
             amountOutMin,
             path,
-            msg.sender, // Send VET directly back to the user
+            msg.sender, 
             deadline
         );
 
@@ -99,8 +97,9 @@ contract B3TRVetSwapper is Ownable {
      * @dev Approves the router if needed (approves max amount for efficiency).
      */
     function _approveRouter() internal {
-        if (IERC20(B3TR_ADDRESS).allowance(address(this), address(router)) == 0) {
-            IERC20(B3TR_ADDRESS).safeApprove(address(router), type(uint256).max);
+        uint256 currentAllowance = IERC20(B3TR_ADDRESS).allowance(address(this), address(router));
+        if (currentAllowance < type(uint256).max / 2) {
+            IERC20(B3TR_ADDRESS).forceApprove(address(router), type(uint256).max);
         }
     }
 

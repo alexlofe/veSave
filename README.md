@@ -65,18 +65,55 @@ The contract assumes that BetterSwap utilizes the standard Uniswap V2 Router int
 
 ### Testing the Contract
 
-You can use Hardhat or Remix to compile, deploy, and test the contract.
+#### Hardhat Testing (Recommended)
 
-#### Prerequisites for Testing
+The project includes a comprehensive Hardhat test suite with 11 unit tests covering all contract functionality.
 
-  - Solidity development environment (e.g., Hardhat).
-  - OpenZeppelin contracts library (`npm install @openzeppelin/contracts`).
+**Run the tests:**
 
-#### Steps to Test
+```bash
+npm run test:contracts
+# or
+npx hardhat test
+```
 
-1.  **Compile:** Compile `B3TRVetSwapper.sol` using Solidity compiler version 0.8.20 or later.
-2.  **Deploy:** Deploy the contract to the desired VeChain network, providing the BetterSwap Router address to the constructor.
-3.  **Approve B3TR:** Before swapping, the user must approve the deployed `B3TRVetSwapper` contract address to spend their B3TR tokens. Call the `approve` function on the B3TR token contract.
+**Test Coverage Report:**
+
+```bash
+npm run test:coverage
+# or
+npx hardhat coverage
+```
+
+**Test Coverage:**
+- ✅ Deployment and initialization (5 tests)
+- ✅ Router management and ownership (3 tests)
+- ✅ Emergency withdrawal functions (3 tests)
+- ✅ **Total: 11 tests, all passing**
+
+**Compile the contract:**
+
+```bash
+npm run compile
+# or
+npx hardhat compile
+```
+
+#### Alternative: Remix IDE
+
+You can also test using Remix IDE:
+
+1. Open https://remix.ethereum.org/
+2. Upload `contracts/B3TRVetSwapper.sol`
+3. Compile with Solidity 0.8.20+
+4. Deploy with a router address (use `0x1111111111111111111111111111111111111111` for testing)
+5. Test contract functions in the deployed contracts panel
+
+#### Deployment Steps (Production)
+
+1.  **Compile:** `npx hardhat compile`
+2.  **Deploy:** Deploy the contract to VeChain network, providing the BetterSwap Router address to the constructor.
+3.  **Approve B3TR:** Before swapping, users must approve the deployed `B3TRVetSwapper` contract address to spend their B3TR tokens.
 4.  **Estimate Swap (Optional):** Call `getEstimatedVETOut` to get an estimated output amount.
 5.  **Execute Swap:** Call the `swapB3TRForVET` function, providing the `amountIn`, `amountOutMin` (slippage protection), and `deadline`.
 

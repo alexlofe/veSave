@@ -7,7 +7,7 @@ export function VeChainDAppKitProvider({ children }: { children: React.ReactNode
       node="https://testnet.vechain.org/"
       usePersistence={true}
       walletConnectOptions={{
-        projectId: '75220875292977', // Placeholder or common ID
+        projectId: '75220875292977', 
         metadata: {
           name: 'veSave',
           description: 'The easiest way to save and earn on the VeChain blockchain.',
