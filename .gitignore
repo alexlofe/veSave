@@ -25,5 +25,4 @@ dist-ssr
 
 .env
 
-providers/VeChainKitProvider.tsx
 constants_copy.ts
