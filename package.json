@@ -11,7 +11,11 @@
     "test": "vitest",
     "test:contracts": "hardhat test",
     "test:coverage": "hardhat coverage",
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.cjs",
+    "deploy:local": "hardhat run scripts/deploy.cjs --network localhost",
+    "deploy:testnet": "hardhat run scripts/deploy.cjs --network vechain_testnet",
+    "deploy:mainnet": "hardhat run scripts/deploy.cjs --network vechain_mainnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
@@ -37,6 +41,8 @@
     "vitest": "^4.0.10"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@openzeppelin/contracts": "^5.0.2",
     "@vechain/dapp-kit": "^2.0.4",
     "@vechain/dapp-kit-react": "^2.0.4",

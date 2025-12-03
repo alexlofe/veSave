@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 // Standard Uniswap V2 Router Interface
 interface IUniswapV2Router02 {
@@ -25,7 +26,7 @@ interface IUniswapV2Router02 {
  * @title B3TRVetSwapper
  * @dev A contract to swap B3TR tokens for VET using the BetterSwap DEX.
  */
-contract B3TRVetSwapper is Ownable {
+contract B3TRVetSwapper is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // B3TR Token Address
@@ -59,7 +60,7 @@ contract B3TRVetSwapper is Ownable {
         uint256 amountIn,
         uint256 amountOutMin,
         uint256 deadline
-    ) external {
+    ) external nonReentrant {
         require(amountIn > 0, "Amount must be > 0");
 
         IERC20(B3TR_ADDRESS).safeTransferFrom(msg.sender, address(this), amountIn);

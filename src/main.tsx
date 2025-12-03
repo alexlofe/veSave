@@ -2,9 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 import App from './App.tsx'
-import { VeChainDAppKitProvider } from './components/DAppKitProvider.tsx'
+import { VeChainKitProvider } from './components/VeChainKitProvider.tsx'
 import './style.css'
 
+// Polyfill process.env for libraries that expect it
 const walletConnectProjectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID ?? ''
 const globalProcess = (globalThis as Record<string, unknown>).process as {
   env?: Record<string, string | undefined>
@@ -20,8 +21,8 @@ const globalProcess = (globalThis as Record<string, unknown>).process as {
 
 ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
   <React.StrictMode>
-    <VeChainDAppKitProvider>
+    <VeChainKitProvider>
       <App />
-    </VeChainDAppKitProvider>
+    </VeChainKitProvider>
   </React.StrictMode>,
 )

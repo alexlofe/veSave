@@ -155,21 +155,29 @@ describe("B3TRVetSwapper", function () {
       // Execute swap
       await expect(swapper.connect(user).swapB3TRForVET(amountIn, amountOutMin, deadline))
         .to.emit(swapper, "Swapped");
-        // Note: We can't easily check the exact VET amount here because MockRouter 
-        // sends ETH (VET) but Hardhat network handles ETH balances differently 
-        // and MockRouter calculation is simple.
-        // However, we can check B3TR balance decreased.
 
       const userB3TRBalanceAfter = await mockB3TR.balanceOf(user.address);
       expect(userB3TRBalanceAfter).to.equal(0);
-      
-      // Verify swapper has no B3TR left (it should have sent it to router, 
-      // but our MockRouter doesn't take it, so it sits in Swapper?
-      // Wait, MockRouter DOES NOT transferFrom.
-      // So in this specific MOCK setup, the tokens stay in the Swapper contract.
-      // Real router would take them.
-      // So we check if Swapper received them.
-      expect(await mockB3TR.balanceOf(swapper.target)).to.equal(amountIn);
+
+      expect(await mockB3TR.balanceOf(swapper.target)).to.equal(0);
+
+      expect(await mockB3TR.balanceOf(mockRouter.target)).to.equal(amountIn);
+    });
+
+    it("Should revert if slippage is too high (amountOutMin not met)", async function () {
+      const amountIn = ethers.parseEther("10");
+      const amountOutMin = ethers.parseEther("9.5");
+      const deadline = Math.floor(Date.now() / 1000) + 3600;
+
+      // Mint B3TR to user
+      await mockB3TR.mint(user.address, amountIn);
+
+      // Approve swapper to spend B3TR
+      await mockB3TR.connect(user).approve(swapper.target, amountIn);
+
+      await expect(
+        swapper.connect(user).swapB3TRForVET(amountIn, amountOutMin, deadline)
+      ).to.be.revertedWithCustomError(mockRouter, "InsufficientOutputAmount");
     });
 
     it("Should revert if amountIn is zero", async function () {

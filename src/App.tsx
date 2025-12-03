@@ -1,5 +1,4 @@
-﻿
-import { useWallet, useWalletModal } from '@vechain/dapp-kit-react'
+import { useWallet, useConnectModal } from '@vechain/vechain-kit'
 import type { FormEvent } from 'react'
 import { useMemo, useState } from 'react'
 
@@ -21,8 +20,11 @@ type StatusLink = {
 const buildExplorerLink = (base: string, id: string) => `${base.replace(/\/$/, '')}/${id}`
 
 const App = () => {
-  const { account, disconnect } = useWallet()
-  const { open: openConnectModal } = useWalletModal()
+  const { account, connection, disconnect } = useWallet()
+  const { open: openConnectModal } = useConnectModal()
+
+  const connectedAddress = account?.address ?? null
+  const isConnected = connection?.isConnected ?? false
 
   const [usdcAmount, setUsdcAmount] = useState(DEFAULT_AMOUNT)
   const [networkError, setNetworkError] = useState<string | null>(null)
@@ -64,9 +66,6 @@ const App = () => {
 
     return { swap, bridge, stake }
   }, [lastSwap, lastBridge, lastStake])
-
-  const connectedAddress = account ?? null
-  const isConnected = !!account
 
   const accountPreview = useMemo(
     () =>
