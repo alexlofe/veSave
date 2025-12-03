@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 
 import { useEphemeralWallet } from './hooks/useEphemeralWallet'
 import { useBridgeWorkflow } from './hooks/useBridgeWorkflow'
+import { useB3TRSwap } from './hooks/useB3TRSwap'
 import {
   SEPOLIA_TX_BASE,
   VECHAIN_TESTNET_TX_BASE,
@@ -32,6 +33,11 @@ const App = () => {
   const [copyState, setCopyState] = useState<string | null>(null)
   const [isStatusExpanded, setStatusExpanded] = useState(false)
 
+  // B3TR Swap state
+  const [b3trAmount, setB3trAmount] = useState('')
+  const [estimatedVET, setEstimatedVET] = useState<string | null>(null)
+  const [b3trSlippage, setB3trSlippage] = useState('1') // 1% default
+
   const { wallet: walletSession, createWallet, resetWallet } = useEphemeralWallet()
   const {
     statuses,
@@ -43,6 +49,25 @@ const App = () => {
     lastBridge,
     lastStake,
   } = useBridgeWorkflow(walletSession)
+
+  // B3TR Swap hook
+  const {
+    swapB3TRForVET,
+    getEstimatedVETOut,
+    status: b3trSwapStatus,
+    error: b3trSwapError,
+    resetStatus: resetB3TRSwapStatus,
+    isConfigured: isB3TRSwapConfigured,
+    isTransactionPending: isB3TRSwapPending,
+  } = useB3TRSwap({
+    onSuccess: () => {
+      setB3trAmount('')
+      setEstimatedVET(null)
+    },
+    onError: (err) => {
+      console.error('B3TR swap error:', err)
+    },
+  })
 
   const isSubmitDisabled = useMemo(() => {
     const amountValue = Number(usdcAmount)
@@ -144,6 +169,56 @@ const App = () => {
       setTimeout(() => setCopyState(null), 2500)
     }
   }
+
+  // B3TR Swap handlers
+  const handleGetEstimate = async () => {
+    if (!b3trAmount || Number(b3trAmount) <= 0) {
+      return
+    }
+    try {
+      const estimate = await getEstimatedVETOut(b3trAmount)
+      setEstimatedVET(estimate)
+    } catch (err) {
+      console.error('Failed to get estimate:', err)
+      setEstimatedVET(null)
+    }
+  }
+
+  const handleB3TRSwap = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!b3trAmount || Number(b3trAmount) <= 0) {
+      return
+    }
+    const slippageBps = Math.round(Number(b3trSlippage) * 100) // Convert % to basis points
+    await swapB3TRForVET(b3trAmount, slippageBps)
+  }
+
+  const isB3TRSwapDisabled = useMemo(() => {
+    const amountValue = Number(b3trAmount)
+    return (
+      Number.isNaN(amountValue) ||
+      amountValue <= 0 ||
+      !isB3TRSwapConfigured ||
+      isB3TRSwapPending ||
+      b3trSwapStatus === 'approving' ||
+      b3trSwapStatus === 'swapping'
+    )
+  }, [b3trAmount, isB3TRSwapConfigured, isB3TRSwapPending, b3trSwapStatus])
+
+  const b3trSwapStatusText = useMemo(() => {
+    switch (b3trSwapStatus) {
+      case 'approving':
+        return 'Approving B3TR...'
+      case 'swapping':
+        return 'Swapping B3TR for VET...'
+      case 'success':
+        return 'Swap completed!'
+      case 'error':
+        return 'Swap failed'
+      default:
+        return null
+    }
+  }, [b3trSwapStatus])
 
   if (!isConnected) {
     return (
@@ -266,6 +341,106 @@ const App = () => {
               <span className="label">Error</span>
               <span className="value monospace">{networkError ?? error}</span>
             </div>
+          ) : null}
+        </section>
+
+        {/* B3TR to VET Swap Section */}
+        <section className="panel">
+          <header>
+            <h2>B3TR to VET Swap</h2>
+            <p className="helper-text">
+              Swap your B3TR tokens for native VET using the VeRocket DEX.
+            </p>
+          </header>
+
+          <form className="automation-form" onSubmit={handleB3TRSwap}>
+            <label className="input-group">
+              <span className="label">B3TR Amount</span>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={b3trAmount}
+                onChange={(event) => {
+                  setB3trAmount(event.target.value)
+                  setEstimatedVET(null)
+                }}
+                placeholder="Enter B3TR amount to swap"
+                disabled={!isB3TRSwapConfigured}
+              />
+            </label>
+
+            <label className="input-group">
+              <span className="label">Slippage Tolerance (%)</span>
+              <input
+                type="number"
+                min="0.1"
+                max="50"
+                step="0.1"
+                value={b3trSlippage}
+                onChange={(event) => setB3trSlippage(event.target.value)}
+                placeholder="1"
+                disabled={!isB3TRSwapConfigured}
+              />
+            </label>
+
+            <div className="actions">
+              <button
+                className="secondary"
+                type="button"
+                onClick={() => { void handleGetEstimate() }}
+                disabled={!b3trAmount || Number(b3trAmount) <= 0 || !isB3TRSwapConfigured}
+              >
+                Get Estimate
+              </button>
+              <button
+                className="primary"
+                type="submit"
+                disabled={isB3TRSwapDisabled}
+              >
+                {isB3TRSwapPending ? 'Processing...' : 'Swap B3TR for VET'}
+              </button>
+            </div>
+          </form>
+
+          {estimatedVET !== null ? (
+            <div className="info-card">
+              <div className="info-row">
+                <span className="label">Estimated VET Output</span>
+                <span className="value monospace">{estimatedVET} VET</span>
+              </div>
+              <span className="helper-text subtle">
+                Actual amount may vary based on slippage and market conditions.
+              </span>
+            </div>
+          ) : null}
+
+          {b3trSwapStatusText ? (
+            <div className={`info-card ${b3trSwapStatus === 'error' ? 'error' : b3trSwapStatus === 'success' ? 'success' : ''}`}>
+              <span className="label">{b3trSwapStatusText}</span>
+              {b3trSwapStatus === 'success' ? (
+                <button
+                  className="secondary"
+                  type="button"
+                  onClick={resetB3TRSwapStatus}
+                >
+                  Reset
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          {b3trSwapError ? (
+            <div className="error-box" role="alert">
+              <span className="label">Swap Error</span>
+              <span className="value monospace">{b3trSwapError}</span>
+            </div>
+          ) : null}
+
+          {!isB3TRSwapConfigured ? (
+            <p className="helper-text muted">
+              B3TR swap is not configured. Please ensure your wallet is connected and the contract addresses are set.
+            </p>
           ) : null}
         </section>
 

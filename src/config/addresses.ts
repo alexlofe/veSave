@@ -26,6 +26,11 @@ export const B3TR_TOKEN_TESTNET = import.meta.env.VITE_B3TR_TOKEN_TESTNET ?? '';
 export const WVET_MAINNET = '0xD8CCDD85abDbF68DFEc95f06c973e87B1b5A9997';
 export const WVET_TESTNET = import.meta.env.VITE_WVET_TESTNET ?? '';
 
+// B3TRVetSwapper Contract Addresses
+// Deploy with: npx hardhat run scripts/deploy.cjs --network vechain_testnet
+export const B3TR_VET_SWAPPER_MAINNET = import.meta.env.VITE_B3TR_SWAPPER_MAINNET ?? '';
+export const B3TR_VET_SWAPPER_TESTNET = import.meta.env.VITE_B3TR_SWAPPER_TESTNET ?? '';
+
 // Network-specific address getter
 export type NetworkType = 'mainnet' | 'testnet';
 
@@ -33,6 +38,7 @@ export interface NetworkAddresses {
   routerAddress: string;
   b3trAddress: string;
   wvetAddress: string;
+  swapperAddress: string;
 }
 
 export function getNetworkAddresses(network: NetworkType): NetworkAddresses {
@@ -41,6 +47,7 @@ export function getNetworkAddresses(network: NetworkType): NetworkAddresses {
       routerAddress: VEROCKET_ROUTER_MAINNET,
       b3trAddress: B3TR_TOKEN_MAINNET,
       wvetAddress: WVET_MAINNET,
+      swapperAddress: B3TR_VET_SWAPPER_MAINNET,
     };
   }
 
@@ -49,6 +56,7 @@ export function getNetworkAddresses(network: NetworkType): NetworkAddresses {
     routerAddress: VEROCKET_ROUTER_TESTNET,
     b3trAddress: B3TR_TOKEN_TESTNET,
     wvetAddress: WVET_TESTNET,
+    swapperAddress: B3TR_VET_SWAPPER_TESTNET,
   };
 }
 
