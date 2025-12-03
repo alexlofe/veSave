@@ -126,7 +126,8 @@ contract B3TRVetSwapper is Ownable, ReentrancyGuard {
      * @dev Allows the owner to withdraw any accidentally sent VET or tokens.
      */
     function withdrawVET() external onlyOwner {
-        payable(owner()).transfer(address(this).balance);
+        (bool ok, ) = payable(owner()).call{value: address(this).balance}("");
+        require(ok, "VET transfer failed");
     }
 
     function withdrawToken(address tokenAddress) external onlyOwner {

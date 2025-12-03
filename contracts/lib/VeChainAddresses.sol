@@ -10,4 +10,8 @@ library VeChainAddresses {
 
     // WVET - Wrapped VET
     address public constant WVET = 0xD8CCDD85abDbF68DFEc95f06c973e87B1b5A9997;
+
+    function getRouter() internal pure returns (address) { return VEROCKET_ROUTER; }
+    function getB3TR() internal pure returns (address) { return B3TR; }
+    function getWVET() internal pure returns (address) { return WVET; }
 }
