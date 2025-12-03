@@ -190,7 +190,8 @@ const App = () => {
       return
     }
     const slippageBps = Math.round(Number(b3trSlippage) * 100) // Convert % to basis points
-    await swapB3TRForVET(b3trAmount, slippageBps)
+    // Pass estimatedVET for slippage protection (user should click "Get Estimate" first)
+    await swapB3TRForVET(b3trAmount, slippageBps, estimatedVET || undefined)
   }
 
   const isB3TRSwapDisabled = useMemo(() => {

@@ -38,7 +38,7 @@ export interface UseB3TRSwapProps {
 
 export interface UseB3TRSwapReturn {
   /** Execute the B3TR to VET swap */
-  swapB3TRForVET: (amountB3TR: string, slippageBps?: number) => Promise<void>;
+  swapB3TRForVET: (amountB3TR: string, slippageBps?: number, estimatedVETOut?: string) => Promise<void>;
   /** Get estimated VET output for a given B3TR amount */
   getEstimatedVETOut: (amountB3TR: string) => Promise<string>;
   /** Current swap status */
@@ -143,10 +143,12 @@ export function useB3TRSwap(props: UseB3TRSwapProps = {}): UseB3TRSwapReturn {
    *
    * @param amountB3TR - Amount of B3TR to swap (in token units, not wei)
    * @param slippageBps - Slippage tolerance in basis points (100 = 1%). Default: 100
+   * @param estimatedVETOut - Expected VET output (from getEstimatedVETOut). If provided, used for slippage protection.
    */
   const swapB3TRForVET = useCallback(async (
     amountB3TR: string,
-    _slippageBps: number = 100
+    slippageBps: number = 100,
+    estimatedVETOut?: string
   ): Promise<void> => {
     if (!isConfigured) {
       const errorMsg = 'B3TR swap not configured. Check contract addresses and wallet connection.';
@@ -174,11 +176,15 @@ export function useB3TRSwap(props: UseB3TRSwapProps = {}): UseB3TRSwapReturn {
       // Calculate deadline (30 minutes from now)
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 30 * 60);
 
-      // For slippage, we'd need to get estimated output first
-      // Using 0 as minimum for now - should be calculated from getEstimatedVETOut
-      // TODO: Integrate with getEstimatedVETOut and apply slippageBps
-      const amountOutMin = BigInt(0);
-      void _slippageBps; // Mark as intentionally unused for now
+      // Calculate minimum output with slippage protection
+      let amountOutMin = BigInt(0);
+      if (estimatedVETOut && Number(estimatedVETOut) > 0) {
+        // Apply slippage: minOut = estimated * (10000 - slippageBps) / 10000
+        // Use string manipulation to avoid FixedPointNumber arithmetic issues
+        const estimatedWei = Units.parseUnits(estimatedVETOut, Units.ether);
+        const estimatedBigInt = BigInt(estimatedWei.toString());
+        amountOutMin = (estimatedBigInt * BigInt(10000 - slippageBps)) / BigInt(10000);
+      }
 
       // Build approval clause
       const approveClause = Clause.callFunction(
