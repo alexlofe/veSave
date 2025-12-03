@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 import App from './App.tsx'
+import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { VeChainKitProvider } from './components/VeChainKitProvider.tsx'
 import './style.css'
 
@@ -21,8 +22,10 @@ const globalProcess = (globalThis as Record<string, unknown>).process as {
 
 ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
   <React.StrictMode>
-    <VeChainKitProvider>
-      <App />
-    </VeChainKitProvider>
+    <ErrorBoundary>
+      <VeChainKitProvider>
+        <App />
+      </VeChainKitProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 )

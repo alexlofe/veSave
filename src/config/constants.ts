@@ -1,4 +1,12 @@
-export const WANBRIDGE_API_BASE = import.meta.env.VITE_WANBRIDGE_API_BASE
+// CRITICAL: WanBridge API base URL is required for cross-chain bridging functionality
+const _wanbridgeApiBase = import.meta.env.VITE_WANBRIDGE_API_BASE
+if (!_wanbridgeApiBase) {
+  console.error(
+    '[CONFIG ERROR] VITE_WANBRIDGE_API_BASE is not set. ' +
+    'Cross-chain bridging will fail. Set this in your .env file.'
+  )
+}
+export const WANBRIDGE_API_BASE = _wanbridgeApiBase ?? ''
 
 export const WANBRIDGE_STATUS_BASE =
   import.meta.env.VITE_WANBRIDGE_STATUS_BASE ?? 'https://bridge-api.wanchain.org/api/status'
@@ -24,6 +32,9 @@ export const VECHAIN_NODE_URL =
 // VET is the native VeChain asset, so no contract address exists.
 export const VECHAIN_NATIVE_TOKEN = 'VET'
 
+// WARNING: Stargate router address MUST be configured before production use.
+// The zero address default will cause staking transactions to fail or burn funds!
+// Set VITE_STARGATE_ROUTER_ADDRESS in your .env file with the correct contract address.
 export const STARGATE_ROUTER_ADDRESS =
   import.meta.env.VITE_STARGATE_ROUTER_ADDRESS ?? '0x0000000000000000000000000000000000000000'
 

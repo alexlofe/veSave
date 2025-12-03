@@ -181,11 +181,10 @@ export function useB3TRSwap(props: UseB3TRSwapProps = {}): UseB3TRSwapReturn {
       // Parse the hex string to BigInt and convert to ether string
       const estimatedWei = BigInt(returnData);
       return formatWeiToEther(estimatedWei);
-    } catch {
-      // If contract call fails (e.g., contract not deployed), use fallback estimate
-      // based on mock router behavior (90% of input for testing)
-      const estimatedWei = (BigInt(amountWei.toString()) * BigInt(90)) / BigInt(100);
-      return formatWeiToEther(estimatedWei);
+    } catch (err) {
+      // Re-throw the error so the UI can display it - do NOT return fake estimates
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get swap estimate from contract';
+      throw new Error(`Unable to estimate VET output: ${errorMessage}`);
     }
   }, [isConfigured, swapperAddress]);
 
@@ -227,14 +226,33 @@ export function useB3TRSwap(props: UseB3TRSwapProps = {}): UseB3TRSwapReturn {
       // Calculate deadline (30 minutes from now)
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 30 * 60);
 
+      // SECURITY: Always require a valid estimate for slippage protection
+      // If no estimate provided, fetch it now - never proceed with 0 slippage
+      let effectiveEstimate = estimatedVETOut;
+      if (!effectiveEstimate || Number(effectiveEstimate) <= 0) {
+        try {
+          effectiveEstimate = await getEstimatedVETOut(amountB3TR);
+        } catch (estimateErr) {
+          const estimateErrorMsg = estimateErr instanceof Error
+            ? estimateErr.message
+            : 'Failed to get swap estimate';
+          throw new Error(`Cannot proceed without slippage protection: ${estimateErrorMsg}`);
+        }
+
+        // Double-check we got a valid estimate
+        if (!effectiveEstimate || Number(effectiveEstimate) <= 0) {
+          throw new Error('Cannot proceed: received zero or invalid estimate for slippage protection');
+        }
+      }
+
       // Calculate minimum output with slippage protection
-      let amountOutMin = BigInt(0);
-      if (estimatedVETOut && Number(estimatedVETOut) > 0) {
-        // Apply slippage: minOut = estimated * (10000 - slippageBps) / 10000
-        // Use string manipulation to avoid FixedPointNumber arithmetic issues
-        const estimatedWei = Units.parseUnits(estimatedVETOut, Units.ether);
-        const estimatedBigInt = BigInt(estimatedWei.toString());
-        amountOutMin = (estimatedBigInt * BigInt(10000 - slippageBps)) / BigInt(10000);
+      // Apply slippage: minOut = estimated * (10000 - slippageBps) / 10000
+      const estimatedWei = Units.parseUnits(effectiveEstimate, Units.ether);
+      const estimatedBigInt = BigInt(estimatedWei.toString());
+      const amountOutMin = (estimatedBigInt * BigInt(10000 - slippageBps)) / BigInt(10000);
+
+      if (amountOutMin <= BigInt(0)) {
+        throw new Error('Cannot proceed: calculated minimum output is zero - this would expose you to sandwich attacks');
       }
 
       // Build approval clause
@@ -262,7 +280,7 @@ export function useB3TRSwap(props: UseB3TRSwapProps = {}): UseB3TRSwapReturn {
       setStatus('error');
       onError?.(errorMessage);
     }
-  }, [isConfigured, account?.address, b3trAddress, swapperAddress, sendTransaction, onError]);
+  }, [isConfigured, account?.address, b3trAddress, swapperAddress, sendTransaction, onError, getEstimatedVETOut]);
 
   const resetStatus = useCallback(() => {
     setStatus('idle');

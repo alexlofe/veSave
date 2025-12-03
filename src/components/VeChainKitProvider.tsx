@@ -11,6 +11,34 @@ const delegatorUrl = import.meta.env.VITE_FEE_DELEGATOR_URL ?? '';
 const nodeUrl = import.meta.env.VITE_VECHAIN_NODE_URL ?? 'https://testnet.vechain.org/';
 const networkType = nodeUrl.includes('mainnet') ? 'main' : 'test';
 
+// CRITICAL: Social login users have empty wallets and cannot pay gas fees.
+// Fee delegation MUST be configured for Privy to work properly.
+const privyEnabled = (() => {
+  if (!privyAppId) {
+    return false;
+  }
+
+  // Validate fee delegation is configured (CRITICAL)
+  if (!delegatorUrl) {
+    console.error(
+      '[VeChainKitProvider] CRITICAL: Privy app ID is set but fee delegation URL is missing. ' +
+      'Social login users will not be able to submit transactions without fee delegation. ' +
+      'Disabling Privy social login. Set VITE_FEE_DELEGATOR_URL to enable social login.'
+    );
+    return false;
+  }
+
+  // Validate clientId is set (HIGH severity)
+  if (!privyClientId) {
+    console.warn(
+      '[VeChainKitProvider] WARNING: Privy app ID is set but client ID is missing. ' +
+      'This may cause authentication issues. Set VITE_PRIVY_CLIENT_ID for proper Privy configuration.'
+    );
+  }
+
+  return true;
+})();
+
 export function VeChainKitProvider({ children }: { children: React.ReactNode }) {
   return (
     <VeChainKitProviderBase
@@ -35,8 +63,8 @@ export function VeChainKitProvider({ children }: { children: React.ReactNode }) 
       }}
 
       // Privy configuration for social login (email, Google, passkey)
-      // Only configure if Privy app ID is provided
-      privy={privyAppId ? {
+      // Only configure if Privy is enabled (requires both app ID and fee delegation)
+      privy={privyEnabled ? {
         appId: privyAppId,
         clientId: privyClientId,
         loginMethods: ['google', 'email'],
@@ -63,13 +91,13 @@ export function VeChainKitProvider({ children }: { children: React.ReactNode }) 
       }}
 
       // Available login methods with layout configuration
+      // Social login methods only shown when Privy is enabled (with fee delegation)
       loginMethods={[
         { method: 'vechain', gridColumn: 4 },
         { method: 'dappkit', gridColumn: 4 },
-        ...(privyAppId ? [
+        ...(privyEnabled ? [
           { method: 'email' as const, gridColumn: 2 },
           { method: 'google' as const, gridColumn: 2 },
-          { method: 'passkey' as const, gridColumn: 2 },
         ] : []),
       ]}
 

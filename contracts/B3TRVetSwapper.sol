@@ -113,9 +113,13 @@ contract B3TRVetSwapper is Ownable, ReentrancyGuard {
 
     function _setRouter(address _routerAddress) internal {
         require(_routerAddress != address(0), "Invalid router address");
+        // Reset approval for old router (if exists) to prevent security risk
+        if (address(router) != address(0)) {
+            IERC20(B3TR_ADDRESS).forceApprove(address(router), 0);
+        }
         router = IUniswapV2Router02(_routerAddress);
         // Fetch the WVET address directly from the router
-        WVET_ADDRESS = router.WETH(); 
+        WVET_ADDRESS = router.WETH();
         emit RouterUpdated(_routerAddress);
     }
 
