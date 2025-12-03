@@ -267,8 +267,8 @@ const App = () => {
           <header>
             <h2>Deposit &amp; Automations</h2>
             <p className="helper-text">
-              Add funds to your deposit address and your funds will be bridged to VeChain, swaped to
-              VET, then stakeed in Stargate.
+              Add funds to your deposit address and your funds will be bridged to VeChain, swapped to
+              VET, then staked in Stargate.
             </p>
           </header>
 
